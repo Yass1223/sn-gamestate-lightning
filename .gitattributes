@@ -2,3 +2,6 @@
 *.gif filter=lfs diff=lfs merge=lfs -text
 *.zip !text !filter !merge !diff
 *.gif !text !filter !merge !diff
+
+# Shell scripts run on Linux (Lightning AI) — always store/check out with LF endings
+*.sh text eol=lf
