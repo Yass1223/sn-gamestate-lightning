@@ -1,0 +1,59 @@
+name: SoccerNet GSR Evaluation on Lightning AI
+
+# Manual trigger only. This avoids spinning up paid GPU compute on every push.
+# Run it from the GitHub UI: Actions tab -> "SoccerNet GSR Evaluation on Lightning AI" -> Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      eval_set:
+        description: "Which split(s) to evaluate"
+        type: choice
+        options:
+          - both
+          - valid
+          - test
+        default: both
+      nvid:
+        description: "Number of videos per split (-1 = all)"
+        type: string
+        default: "-1"
+      machine:
+        description: "Lightning GPU machine"
+        type: choice
+        options:
+          - A10
+          - L4
+          - T4
+          - A100
+        default: A10
+
+jobs:
+  dispatch-to-lightning:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30   # only the dispatch step runs here; the GPU job runs on Lightning
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Lightning SDK
+        run: pip install --upgrade lightning-sdk
+
+      - name: Dispatch evaluation job to Lightning Studio
+        env:
+          # --- Secrets: add these under Settings > Secrets and variables > Actions ---
+          LIGHTNING_USER_ID: ${{ secrets.LIGHTNING_USER_ID }}
+          LIGHTNING_API_KEY: ${{ secrets.LIGHTNING_API_KEY }}
+          LIGHTNING_USER: ${{ secrets.LIGHTNING_USER }}
+          LIGHTNING_TEAMSPACE: ${{ secrets.LIGHTNING_TEAMSPACE }}
+          # --- Variable: the Studio name (created automatically if it does not exist) ---
+          LIGHTNING_STUDIO: ${{ vars.LIGHTNING_STUDIO }}
+        run: |
+          python .github/scripts/run_lightning_eval.py \
+            --eval-set "${{ inputs.eval_set }}" \
+            --nvid "${{ inputs.nvid }}" \
+            --machine "${{ inputs.machine }}"
