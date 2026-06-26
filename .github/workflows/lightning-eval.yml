@@ -48,6 +48,8 @@ jobs:
           # --- Secrets: add these under Settings > Secrets and variables > Actions ---
           LIGHTNING_USER_ID: ${{ secrets.LIGHTNING_USER_ID }}
           LIGHTNING_API_KEY: ${{ secrets.LIGHTNING_API_KEY }}
+          # Owner of the teamspace: set LIGHTNING_ORG for an organization, or LIGHTNING_USER for a personal account.
+          LIGHTNING_ORG: ${{ secrets.LIGHTNING_ORG }}
           LIGHTNING_USER: ${{ secrets.LIGHTNING_USER }}
           LIGHTNING_TEAMSPACE: ${{ secrets.LIGHTNING_TEAMSPACE }}
           # --- Variable: the Studio name (created automatically if it does not exist) ---
