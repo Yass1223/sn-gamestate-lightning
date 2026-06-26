@@ -9,9 +9,11 @@ GPU Job (so the Action returns immediately and is not blocked by the long run).
 Required environment variables (set as GitHub Actions secrets / variables):
     LIGHTNING_USER_ID    Lightning account user id      (Settings > Keys)  [secret]
     LIGHTNING_API_KEY    Lightning API key              (Settings > Keys)  [secret]
-    LIGHTNING_USER       Lightning username                                [secret/var]
-    LIGHTNING_TEAMSPACE  Teamspace that owns the Studio                    [secret/var]
+    LIGHTNING_TEAMSPACE  Teamspace that owns the Studio                    [secret]
     LIGHTNING_STUDIO     Studio name to run in (created if missing)        [var]
+    Owner of the teamspace - set exactly ONE of:
+      LIGHTNING_ORG      Organization slug (e.g. "searhaae-org")          [secret]
+      LIGHTNING_USER     Personal account username                         [secret]
 
 Provided automatically by GitHub Actions:
     GITHUB_SERVER_URL, GITHUB_REPOSITORY, GITHUB_SHA, GITHUB_RUN_ID
@@ -64,12 +66,23 @@ def main() -> None:
     clone_url = f"{server}/{repo}.git"
     repo_dir = repo.split("/")[-1]
 
+    # The Studio owner can be an organization (org=) or a personal user (user=).
+    # Set LIGHTNING_ORG for an org-owned teamspace (e.g. a "<name>-org" slug),
+    # or LIGHTNING_USER for a personal account. Exactly one is required.
+    owner_kwargs: dict[str, str] = {}
+    if os.environ.get("LIGHTNING_ORG"):
+        owner_kwargs["org"] = os.environ["LIGHTNING_ORG"]
+    elif os.environ.get("LIGHTNING_USER"):
+        owner_kwargs["user"] = os.environ["LIGHTNING_USER"]
+    else:
+        sys.exit("ERROR: set either LIGHTNING_ORG (organization) or LIGHTNING_USER (personal)")
+
     print(f"Starting Studio '{os.environ.get('LIGHTNING_STUDIO')}' ...")
     studio = Studio(
         name=env("LIGHTNING_STUDIO"),
         teamspace=env("LIGHTNING_TEAMSPACE"),
-        user=env("LIGHTNING_USER"),
         create_ok=True,
+        **owner_kwargs,
     )
     studio.start()
 
