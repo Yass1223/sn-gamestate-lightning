@@ -1,0 +1,29 @@
+# BoT-SORT (tracklab's native wrapper) driven by the SoccerNet sports-OSNet ReID, fetched
+# from Hugging Face. Hyperparameters mirror the validated notebook (§2 "bot_sort").
+#
+# ReID weights: the third resolver arg materialises the checkpoint as `osnet_x1_0_sports.pt`
+# so tracklab's ReIDDetectMultiBackend builds osnet_x1_0 and torchreid loads it correctly
+# (the raw `.pth.tar-60` name/suffix would otherwise be loaded as random weights).
+#
+# min_confidence 0.1: pre-filter floor before BoT-SORT, kept low so the BYTE low-score
+# association still receives boxes in [0.1, track_high_thresh).
+#
+# Faithful-deviation notes vs the notebook (this fork's BoTSORT signature):
+#   * track_low_thresh is fixed at 0.1 in the fork (not a constructor arg); notebook used 0.05.
+#   * min_hits / max_age aren't exposed here; track lifetime is governed by track_buffer.
+#   * frame_rate=25 matches SoccerNet GS clips (buffer_size = frame_rate/30 * track_buffer).
+_target_: tracklab.wrappers.BotSORT
+cfg:
+  model_weights: ${hf:${hf_weights_repo},sports_model.pth.tar-60,osnet_x1_0_sports.pt}
+  fp16: true
+  min_confidence: 0.1
+  hyperparams:
+    track_high_thresh: 0.3
+    new_track_thresh: 0.4
+    track_buffer: 60
+    match_thresh: 0.85
+    proximity_thresh: 0.5
+    appearance_thresh: 0.30
+    cmc_method: ecc
+    frame_rate: 25
+    lambda_: 0.985

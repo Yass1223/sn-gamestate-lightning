@@ -1,0 +1,12 @@
+# YOLO11-L SoccerNet fine-tune (single-class person), weights fetched from Hugging Face.
+# Same wrapper as the stock detector; only the checkpoint and the confidence floor change.
+#
+# min_confidence is lowered to 0.1 on purpose: the notebook ran the detector at a low floor
+# so low-score boxes reach the tracker, where BoT-SORT's BYTE step (low gate 0.1, high gate
+# track_high_thresh=0.3) can recover them. Leaving the stock 0.4 floor would discard those
+# boxes before the tracker ever sees them.
+_target_: tracklab.wrappers.bbox_detector.yolo_ultralytics_api.YOLOUltralytics
+batch_size: 4
+cfg:
+  path_to_checkpoint: ${hf:${hf_weights_repo},yolov11_sn_best.pt}
+  min_confidence: 0.1

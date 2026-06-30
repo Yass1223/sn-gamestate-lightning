@@ -1,0 +1,13 @@
+# GTA-Link offline tracklet stitching (notebook §11d.5), run as its own pipeline stage
+# right after `track`. Uses its own sports-OSNet (fetched from Hugging Face), independent of
+# the prtreid `reid` module so the GSR downstream (team/role/jersey) is unaffected.
+_target_: sn_gamestate.track.gta_link_api.GTALink
+cfg:
+  osnet_weights: ${hf:${hf_weights_repo},sports_model.pth.tar-60,osnet_x1_0_sports.pt}
+  fp16: true
+  appearance_thresh: 0.25   # agglomerative merge cutoff on cosine distance
+  spatial_thresh: 60        # px centre-gap gate, scaled by sqrt(frame gap)
+  min_tracklet_len: 5       # tracklets shorter than this are not merged
+  ema_alpha: 0.9            # appearance EMA over a tracklet's detections
+  linkage: average
+  batch_size: 64

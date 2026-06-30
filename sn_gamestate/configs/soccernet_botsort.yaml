@@ -1,0 +1,101 @@
+# TrackLab SoccerNet GSR config — BoT-SORT + GTA-Link variant.
+#
+# Same pipeline as soccernet.yaml, but the tracker is BoT-SORT (sports-OSNet ReID) followed
+# by a GTA-Link tracklet-stitching stage, with the detector and OSNet weights fetched from
+# Hugging Face at runtime. prtreid is kept as the `reid` module so team/role/jersey are
+# unchanged (Option B). Run with:  tracklab -cn soccernet_botsort
+#
+# >>> SET THIS to your Hugging Face weights repo (the one holding yolov11_sn_best.pt and
+#     sports_model.pth.tar-60). For a private repo, also export HF_TOKEN in the environment.
+hf_weights_repo: "Ynniss/sn-gamestate-weights"
+
+defaults:
+  - dataset: soccernet_gs
+  - eval: gs_hota
+  - engine: offline
+  - visualization: gamestate
+  - modules/bbox_detector: yolo_ultralytics_snft   # YOLO11-L SoccerNet fine-tune (from HF)
+  - modules/reid: prtreid                          # kept for team/role/jersey (Option B)
+  - modules/track: botsort_osnet                   # BoT-SORT + sports-OSNet (from HF)
+  - modules/gta_link: gta_link                     # offline tracklet stitching (notebook §11d.5)
+  - modules/jersey_number_detect: mmocr
+  - modules/team: kmeans_embeddings
+  - modules/team_side: mean_position
+  - modules/tracklet_agg: voting_role_jn
+  - modules/pitch : nbjw_calib
+  - modules/calibration: nbjw_calib
+  - _self_
+
+# Pipeline definition — GTA-Link runs right after `track`, before any stage that depends on
+# final track ids (jersey/tracklet_agg/team), and before team clustering uses the merged ids.
+pipeline:
+  - bbox_detector
+  - reid
+  - track
+  - gta_link
+  - pitch
+  - calibration
+  - jersey_number_detect
+  - tracklet_agg
+  - team
+  - team_side
+
+
+# Experiment name
+experiment_name: "sn-gamestate-botsort"
+
+# Path definitions
+home_dir: "${oc.env:HOME}"
+data_dir: "${project_dir}/data"
+model_dir: "${project_dir}/pretrained_models"
+
+# Machine configuration
+num_cores: 4
+use_wandb: False
+use_rich: True
+
+modules: # Allows module-specific batch_size and other configuration
+  bbox_detector: {batch_size: 4}
+  pose_bottomup: {batch_size: 8}
+  reid: {batch_size: 64}
+  track: {batch_size: 64}
+  pitch: {batch_size: 1}
+  calibration: {batch_size: 1}
+  jersey_number_detect: {batch_size: 8}
+
+# Flags
+test_tracking: True
+eval_tracking: True
+print_config: False
+
+# Dataset
+dataset:
+  nvid: 1  # Quick first run on a single test clip to validate the pipeline.
+           # >>> Set to -1 to run the FULL GSR 2024 test split (long).
+  eval_set: "test"  # GSR 2024 test split.
+  dataset_path: ${data_dir}/SoccerNetGS
+  vids_dict:
+    valid: []
+    test: []   # e.g. ['SNGS-116'] to run specific clips; empty = all (subject to nvid).
+
+# Tracker state (save computation time by dumping tracking results on disk for later re-use)
+state:
+  save_file: "states/${experiment_name}.pklz"
+  load_file: null
+
+# Visualization
+visualization:
+  cfg:
+    save_videos: True
+
+# configure Hydra to use the current working directory
+# and set up the output directory according to experiment_name
+project_dir: "${hydra:runtime.cwd}"
+hydra:
+  output_subdir: "configs"
+  job:
+    chdir: True
+  run:
+    dir: "outputs/${experiment_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}"
+  sweep:
+    dir: "multirun_outputs/${experiment_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}"
