@@ -1,9 +1,12 @@
-# TrackLab SoccerNet GSR config — BoT-SORT + GTA-Link variant.
+# TrackLab SoccerNet GSR config — BoT-SORT · SOF + GTA-Link variant.
 #
-# Same pipeline as soccernet.yaml, but the tracker is BoT-SORT (sports-OSNet ReID) followed
-# by a GTA-Link tracklet-stitching stage, with the detector and OSNet weights fetched from
-# Hugging Face at runtime. prtreid is kept as the `reid` module so team/role/jersey are
-# unchanged (Option B). Run with:  tracklab -cn soccernet_botsort
+# Same pipeline as soccernet.yaml, but the tracker is BoT-SORT with SOF camera-motion
+# compensation (sports-OSNet ReID) followed by a GTA-Link tracklet-stitching stage, with the
+# detector and OSNet weights fetched from Hugging Face at runtime. This is the winning
+# combination of the CMC ablation (yolov11-bot-sort-cmc.ipynb): YOLO11L + BoT-SORT·SOF +
+# tuned GTA-Link reached HOTA 0.6947 on the GSR test split (raw tracker: 0.6687).
+# prtreid is kept as the `reid` module so team/role/jersey are unchanged (Option B).
+# Run with:  tracklab -cn soccernet_botsort
 #
 # >>> SET THIS to your Hugging Face weights repo (the one holding yolov11_sn_best.pt and
 #     sports_model.pth.tar-60). For a private repo, also export HF_TOKEN in the environment.

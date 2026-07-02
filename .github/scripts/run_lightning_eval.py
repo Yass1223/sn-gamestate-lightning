@@ -47,6 +47,9 @@ def parse_args() -> argparse.Namespace:
                         help="Number of videos per split (-1 = all).")
     parser.add_argument("--machine", default="A10",
                         help="Lightning Machine name, e.g. T4, L4, A10, A100.")
+    parser.add_argument("--config", default="soccernet_botsort",
+                        help="TrackLab config name: soccernet_botsort "
+                             "(BoT-SORT · SOF + GTA-Link) or soccernet (baseline).")
     return parser.parse_args()
 
 
@@ -95,7 +98,8 @@ def main() -> None:
         f"else "
         f"  git clone --quiet {clone_url} {repo_dir} && cd {repo_dir} && git checkout --quiet {sha}; "
         f"fi; "
-        f"SPLITS='{splits}' NVID='{args.nvid}' bash scripts/lightning_eval.sh"
+        f"SPLITS='{splits}' NVID='{args.nvid}' CONFIG_NAME='{args.config}' "
+        f"bash scripts/lightning_eval.sh"
     )
 
     print(f"Submitting asynchronous GPU job on machine '{args.machine}' ...")

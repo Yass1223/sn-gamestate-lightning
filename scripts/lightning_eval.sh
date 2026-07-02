@@ -10,12 +10,14 @@ set -euo pipefail
 SPLITS="${SPLITS:-test}"
 NVID="${NVID:--1}"
 RESULTS_DIR="${RESULTS_DIR:-eval_results}"
-CONFIG_NAME="${CONFIG_NAME:-soccernet}"
+# Default config = BoT-SORT · SOF + GTA-Link tracker (soccernet_botsort).
+# Set CONFIG_NAME=soccernet for the original StrongSORT baseline.
+CONFIG_NAME="${CONFIG_NAME:-soccernet_botsort}"
 VENV="${VENV:-.venv}"
 DATA_DIR="data/SoccerNetGS"
 
 echo "=================================================================="
-echo " SoccerNet GSR evaluation | splits=${SPLITS} nvid=${NVID}"
+echo " SoccerNet GSR evaluation | config=${CONFIG_NAME} splits=${SPLITS} nvid=${NVID}"
 echo "=================================================================="
 
 # 1. Dependencies into a local .venv (Python 3.9)

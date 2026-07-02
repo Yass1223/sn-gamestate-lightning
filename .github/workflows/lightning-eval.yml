@@ -25,7 +25,14 @@ on:
           - L4
           - T4
           - A100
-        default: A10
+        default: L4
+      config:
+        description: "Tracker config (soccernet_botsort = BoT-SORT · SOF + GTA-Link; soccernet = StrongSORT baseline)"
+        type: choice
+        options:
+          - soccernet_botsort
+          - soccernet
+        default: soccernet_botsort
 
 jobs:
   dispatch-to-lightning:
@@ -58,4 +65,5 @@ jobs:
           python .github/scripts/run_lightning_eval.py \
             --eval-set "${{ inputs.eval_set }}" \
             --nvid "${{ inputs.nvid }}" \
-            --machine "${{ inputs.machine }}"
+            --machine "${{ inputs.machine }}" \
+            --config "${{ inputs.config }}"
